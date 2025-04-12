@@ -1,43 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": { 
-        "distDir": "build",
-        "buildCommand": "cd client && npm install && npm run build"
-      }
-    },
-    {
-      "src": "server/src/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["server/**"]
-      }
-    }
+  "buildCommand": "npm run build",
+  "outputDirectory": "client/build",
+  "installCommand": "npm run install:all",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/src/index.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/client/build/static/$1"
-    },
-    {
-      "src": "/(.+)",
-      "dest": "/client/build/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/client/build/index.html"
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "server/**"
     }
-  ],
+  },
   "env": {
     "PORT": "5002",
     "NODE_ENV": "production"
