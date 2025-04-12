@@ -3,8 +3,9 @@ import axios from 'axios';
 import './App.css';
 
 // Configure API URL based on environment
+// For Vercel, we'll deploy the backend separately
 const apiUrl = process.env.NODE_ENV === 'production' 
-  ? '/api' 
+  ? 'https://sa-science-tutor-api.vercel.app/api' 
   : 'http://localhost:5002/api';
 
 function App() {
