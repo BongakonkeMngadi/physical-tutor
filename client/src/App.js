@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
+
+// Configure API URL based on environment
+const apiUrl = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : 'http://localhost:5002/api';
 
 function App() {
   const [question, setQuestion] = useState('');
@@ -21,10 +26,15 @@ function App() {
     setShowPastPapers(false);
 
     try {
-      // Make a real API call to our backend
-      const result = await axios.post('/api/questions', {
+      console.log('Sending request to:', `${apiUrl}/questions`);
+      // Make a real API call to our backend with the full URL
+      const result = await axios.post(`${apiUrl}/questions`, {
         content: question,
         topic: topic
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       // Get the AI response and past papers from the result
@@ -37,8 +47,12 @@ function App() {
         setShowPastPapers(true);
       }
     } catch (error) {
-      console.error('Error:', error);
-      setApiError(error.response?.data?.message || 'Failed to process your question. Please try again.');
+      console.error('Error details:', error);
+      // Provide more detailed error information for debugging
+      const errorMessage = error.response?.data?.message || 
+                          (error.message ? `Error: ${error.message}` : 
+                          'Failed to process your question. Please try again.');
+      setApiError(errorMessage);
       setLoading(false);
     }
   };
