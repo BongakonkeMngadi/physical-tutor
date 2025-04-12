@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 
 // Load environment variables
 dotenv.config();
@@ -49,11 +50,42 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Start the server without requiring MongoDB for demo purposes
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} in demo mode (no MongoDB connection)`);
-  console.log('Note: Database features are simulated for demonstration purposes');
-});
+// Serve static files from the React build directory in production
+if (process.env.NODE_ENV === 'production') {
+  // Adjust path for Vercel deployment
+  const clientBuildPath = path.join(__dirname, '../../../client/build');
+  
+  // Check if the build directory exists
+  if (fs.existsSync(clientBuildPath)) {
+    console.log(`Serving static files from: ${clientBuildPath}`);
+    
+    // Serve static files
+    app.use(express.static(clientBuildPath));
+    
+    // Serve the index.html for any unknown paths (client-side routing)
+    app.get('*', (req, res) => {
+      // Skip API routes
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+      }
+      
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+  } else {
+    console.warn(`Client build directory not found at: ${clientBuildPath}`);
+  }
+}
+
+// Export app for serverless deployment
+module.exports = app;
+
+// Start the server only in development mode or when not in a serverless environment
+if (process.env.NODE_ENV !== 'production' || process.env.SERVER_TYPE === 'standard') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} in demo mode (no MongoDB connection)`);
+    console.log('Note: Database features are simulated for demonstration purposes');
+  });
+}
 
 // In a production environment, you would connect to MongoDB like this:
 // mongoose
